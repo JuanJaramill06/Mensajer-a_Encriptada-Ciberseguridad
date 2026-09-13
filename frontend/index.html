@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Secure Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h1>SECURE CHAT</h1>
+      <div class="mode-control">
+        <label for="mode-select">Mode:</label>
+        <select id="mode-select">
+          <option value="ENCRYPTED">ENCRYPTED (wss://)</option>
+          <option value="UNENCRYPTED">UNENCRYPTED (ws://)</option>
+        </select>
+        <span id="status-badge" class="badge">DESCONECTADO</span>
+      </div>
+    </div>
+
+    <div id="messages" class="messages"></div>
+
+    <div class="input-area">
+      <input type="text" id="username" placeholder="Tu nombre" value="Alice">
+      <input type="text" id="message-input" placeholder="Escribe un mensaje..." disabled>
+      <button id="send-btn" disabled>SEND</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
