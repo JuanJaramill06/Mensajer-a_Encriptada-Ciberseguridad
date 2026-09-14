@@ -4,51 +4,73 @@ const messagesDiv = document.getElementById("messages");
 const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 const usernameInput = document.getElementById("username");
+const chatContainer = document.querySelector(".chat-container");
 
-let socket = null;
+let sockets = {
+  ENCRYPTED: null,
+  UNENCRYPTED: null
+};
+
+let currentMode = "UNENCRYPTED";
 
 const SERVERS = {
-  ENCRYPTED: "wss://localhost:8080/ws",
+  ENCRYPTED: "ws://localhost:8080/ws",
   UNENCRYPTED: "ws://localhost:8000/ws",
 };
 
-function connect() {
-  const mode = modeSelect.value;
+function connectSocket(mode) {
   const url = SERVERS[mode];
 
-  if (socket) {
-    socket.close();
-  }
-
-  statusBadge.textContent = "CONECTANDO...";
-  statusBadge.className = "badge";
-
-  socket = new WebSocket(url);
+  const socket = new WebSocket(url);
 
   socket.onopen = () => {
-    statusBadge.textContent = mode;
-    statusBadge.className =
-      "badge " + (mode === "ENCRYPTED" ? "connected-encrypted" : "connected-unencrypted");
-    messageInput.disabled = false;
-    sendBtn.disabled = false;
+    sockets[mode] = socket;
+    updateUI();
     appendSystemMessage(`Conectado en modo ${mode}`);
   };
 
   socket.onmessage = (event) => {
-    appendMessage(event.data);
+    if (mode === currentMode) {
+      appendMessage(event.data);
+    }
   };
 
   socket.onclose = () => {
-    statusBadge.textContent = "DESCONECTADO";
-    statusBadge.className = "badge";
-    messageInput.disabled = true;
-    sendBtn.disabled = true;
+    sockets[mode] = null;
+    updateUI();
+    appendSystemMessage(`${mode} desconectado`);
   };
 
   socket.onerror = (err) => {
-    console.error("Error de conexión:", err);
-    appendSystemMessage("Error de conexión (revisa la consola)");
+    console.error(`Error en ${mode}:`, err);
+    appendSystemMessage(`Error en ${mode}`);
   };
+
+  return socket;
+}
+
+function updateUI() {
+  const mode = currentMode;
+  const isConnected = sockets[mode] && sockets[mode].readyState === WebSocket.OPEN;
+
+  statusBadge.textContent = mode;
+  statusBadge.className = isConnected
+    ? "badge " + (mode === "ENCRYPTED" ? "connected-encrypted" : "connected-unencrypted")
+    : "badge";
+
+  chatContainer.className = "chat-container " + (mode === "ENCRYPTED" ? "mode-encrypted" : "mode-unencrypted");
+  messageInput.disabled = !isConnected;
+  sendBtn.disabled = !isConnected;
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  updateUI();
+}
+
+function connect() {
+  connectSocket("ENCRYPTED");
+  connectSocket("UNENCRYPTED");
 }
 
 function appendMessage(text) {
@@ -62,7 +84,7 @@ function appendMessage(text) {
 function appendSystemMessage(text) {
   const div = document.createElement("div");
   div.className = "msg";
-  div.innerHTML = `<i>${text}</i>`;
+  div.textContent = text;
   messagesDiv.appendChild(div);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
@@ -70,6 +92,8 @@ function appendSystemMessage(text) {
 function sendMessage() {
   const text = messageInput.value.trim();
   const username = usernameInput.value.trim() || "Anon";
+  const socket = sockets[currentMode];
+
   if (!text || !socket || socket.readyState !== WebSocket.OPEN) return;
 
   const fullMessage = `${username}: ${text}`;
@@ -81,7 +105,19 @@ sendBtn.addEventListener("click", sendMessage);
 messageInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
-modeSelect.addEventListener("change", connect);
+
+modeSelect.addEventListener("change", () => {
+  const newMode = modeSelect.value;
+  currentMode = newMode;
+  switchMode(currentMode);
+
+  if (!sockets[newMode]) {
+    appendSystemMessage(`Conectando a ${newMode}...`);
+    connectSocket(newMode);
+  } else {
+    appendSystemMessage(`Cambiando a ${newMode}`);
+  }
+});
 
 // Conectar automáticamente al cargar la página
 connect();

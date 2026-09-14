@@ -29,11 +29,5 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"[ENCRYPTED] Cliente desconectado. Total: {len(clients)}")
 
 if __name__ == "__main__":
-    print("Servidor CIFRADO corriendo en wss://localhost:8080/ws")
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8080,
-        ssl_certfile="certs/cert.pem",
-        ssl_keyfile="certs/key.pem",
-    )
+    print("Servidor CIFRADO corriendo en ws://localhost:8080/ws")
+    uvicorn.run(app, host="0.0.0.0", port=8080)
