@@ -14,3 +14,7 @@
 2. After that you run the command "py generate_certs.py" to generate the certificate  for the encrypted server
 
 3. Open two separate terminals in the backend folder and run "py server_unencrypted.py" in one and "py server_encrypted.py" in the other. Both need to stay running at the same time so you can switch between modes in the chat., and click the index.html to start chatting
+
+
+
+##Esto para ver si funciona un commit que voy a probar
